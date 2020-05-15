@@ -1,0 +1,3 @@
+# scrapingTool
+
+pythonのbeautifulsoupみたいなのをgoで実現したいと思いました。
