@@ -27,3 +27,23 @@ func (v *Set) Erase(s interface{}) bool {
 	return false
 }
 
+func (v *Set) Union(w *Set) *Set {
+	result := MakeSet()
+	for k,_ := range v.Data {
+		result.Add(k)
+	}
+	for k,_ := range w.Data {
+		result.Add(k)
+	}
+	return result
+}
+
+func (v *Set) Product(w *Set) *Set {
+	result := MakeSet()
+	for k,_ := range w.Data {
+		if v.Exist(k) {
+			result.Add(k)
+		}
+	}
+	return result
+}

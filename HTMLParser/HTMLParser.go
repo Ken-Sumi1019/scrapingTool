@@ -31,6 +31,7 @@ func getAttribute(s string) (string,map[string]string) {
 	result := map[string]string{}
 	frag := 0;tag := ""
 	left := -1;key := ""
+	var shiki uint8
 	for i := 0;i < len(s);i ++{
 		if len(tag) == 0 && (s[i] == ' ' || s[i] == '>') {
 			tag = s[1:i]
@@ -40,9 +41,9 @@ func getAttribute(s string) (string,map[string]string) {
 			frag = 1;left = i + 1
 		} else if frag == 1 && s[i] == '='{
 			key = removeSpace(s[left:i])
-		} else if frag == 1 && s[i] == '"' {
-			left = i + 1;frag = 2
-		} else if frag == 2 && s[i] == '"' {
+		} else if frag == 1 && (s[i] == '"' || s[i] == '\'') {
+			left = i + 1;frag = 2;shiki = s[i]
+		} else if frag == 2 && s[i] == shiki {
 			result[key] = s[left:i];frag = 0
 		}
 	}
@@ -122,7 +123,7 @@ func Solv(s string) *Element {
 
 func Decode(elem *Element,n int) {
 	fmt.Print(strings.Repeat("\t",n))
-	fmt.Println(elem.Tag)
+	fmt.Println(elem.Tag," ",elem.Option)
 	for i := 0;i < len(elem.Data);i ++ {
 		switch v := elem.Data[i].(type) {
 		case string:
