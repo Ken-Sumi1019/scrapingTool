@@ -9,9 +9,17 @@ type dataBox struct {
 
 }
 
+func SearchFirst(elem *HTMLParser.Element,tag string,optionName string,optionValue []string) *HTMLParser.Element {
+	result := []*HTMLParser.Element{}
+	n := 1
+	search_(&result,elem,&n,tag,optionName,optionValue)
+	return result[0]
+}
+
 func SearchAll (elem *HTMLParser.Element,tag string,optionName string,optionValue []string) []*HTMLParser.Element {
 	result := []*HTMLParser.Element{}
-	search_(&result,elem,2147483647,tag,optionName,optionValue)
+	n := 2147483647
+	search_(&result,elem,&n,tag,optionName,optionValue)
 	return result
 }
 
@@ -22,12 +30,13 @@ elem <- 検索する木の根を指定
 counter <- のこり何個見つけるか
 searchKey <- {"class":"hoge"}　みたいに
  */
-func search_(result *[]*HTMLParser.Element,elem *HTMLParser.Element,counter int,tag string,optionName string,optionValue []string)  {
+func search_(result *[]*HTMLParser.Element,elem *HTMLParser.Element,counter *int,tag string,optionName string,optionValue []string)  {
+	if (*counter) <= 0{return}
 	if check(elem,tag,optionName,optionValue) {
 		(*result) = append(*result,elem)
-		counter--
+		(*counter) --
 	}
-	if counter == 0{return}
+	if (*counter) <= 0{return}
 	for _,child := range elem.Data {
 		switch v := child.(type) {
 		case *HTMLParser.Element:
