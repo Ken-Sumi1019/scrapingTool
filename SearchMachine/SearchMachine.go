@@ -33,9 +33,10 @@ func argumentSplit(s string) map[string][]string {
 result <- 見つけた要素を入れるスライス
 elem <- 検索する木の根を指定
 counter <- のこり何個見つけるか
+searchKey <- {"class":"hoge"}　みたいに
  */
-func search(result *[]*HTMLParser.Element,elem *HTMLParser.Element,counter int)  {
-	if check(elem) {
+func search(result *[]*HTMLParser.Element,elem *HTMLParser.Element,counter int,searchKey map[string]string)  {
+	if check(elem,searchKey) {
 		(*result) = append(*result,elem)
 		counter--
 	}
@@ -43,12 +44,27 @@ func search(result *[]*HTMLParser.Element,elem *HTMLParser.Element,counter int) 
 	for _,child := range elem.Data {
 		switch v := child.(type) {
 		case *HTMLParser.Element:
-			search(result,v,counter)
+			search(result,v,counter,searchKey)
 		}
 	}
 }
 
 // 要素が該当するかチェック
-func check(elem *HTMLParser.Element) bool {
+func check(elem *HTMLParser.Element,searchKey map[string]string) bool {
+	for k,v := range searchKey {
+		if !optionCheck(elem,k,v) {
+			return false
+		}
+	}
 	return true
+}
+
+// optionがあるかどうか
+func optionCheck(elem *HTMLParser.Element,k string,v string) bool {
+	if elemV,ok := elem.Option[k];ok {
+		if elemV == v {
+			return true
+		}
+	}
+	return false
 }

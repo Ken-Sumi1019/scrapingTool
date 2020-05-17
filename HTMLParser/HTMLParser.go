@@ -1,7 +1,6 @@
 package HTMLParser
 
 import (
-	_ "./set"
 	"./singularData"
 	"fmt"
 	"regexp"
@@ -123,7 +122,7 @@ func Solv(s string) *Element {
 
 func Decode(elem *Element,n int) {
 	fmt.Print(strings.Repeat("\t",n))
-	fmt.Println(elem.Tag," ",elem.Option)
+	fmt.Println("<",elem.Tag,"> ",elem.Option)
 	for i := 0;i < len(elem.Data);i ++ {
 		switch v := elem.Data[i].(type) {
 		case string:
@@ -134,5 +133,5 @@ func Decode(elem *Element,n int) {
 		}
 	}
 	fmt.Print(strings.Repeat("\t",n))
-	fmt.Println(elem.Tag)
+	fmt.Println("</",elem.Tag,">")
 }
