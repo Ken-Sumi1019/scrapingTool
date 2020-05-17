@@ -22,6 +22,7 @@ type Element struct {
 	Option map[string]string
 }
 
+
 func NewElement(tag string,d map[string]string) *Element {
 	return &Element{Tag:tag,Option:d}
 }
@@ -120,18 +121,23 @@ func Solv(s string) *Element {
 	return stack[0]
 }
 
-func Decode(elem *Element,n int) {
-	fmt.Print(strings.Repeat("\t",n))
-	fmt.Println("<",elem.Tag,"> ",elem.Option)
+func mapToString(m map[string]string) string {
+	s := ""
+	for k,v := range m {
+		s = strings.Join([]string{s," ",k,":",v},"")
+	}
+	return s
+}
+
+func Decode(elem *Element,n int,s *string) {
+	(*s) = strings.Join([]string{(*s),strings.Repeat("\t",n),"<",elem.Tag,"> ",mapToString(elem.Option),"\n"},"")
 	for i := 0;i < len(elem.Data);i ++ {
 		switch v := elem.Data[i].(type) {
 		case string:
-			fmt.Print(strings.Repeat("\t",n + 1))
-			fmt.Println(v)
+			(*s) = strings.Join([]string{(*s),strings.Repeat("\t",n+1),v,"\n"},"")
 		case *Element:
-			Decode(v,n+1)
+			Decode(v,n+1,s)
 		}
 	}
-	fmt.Print(strings.Repeat("\t",n))
-	fmt.Println("</",elem.Tag,">")
+	(*s) = strings.Join([]string{*s,strings.Repeat("\t",n),"</",elem.Tag,">\n"},"")
 }

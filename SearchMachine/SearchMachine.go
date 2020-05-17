@@ -1,30 +1,17 @@
 package SearchMachine
 
 import (
-	"strings"
 	"../HTMLParser"
+	"strings"
 )
 
 type dataBox struct {
 
 }
 
-/*
-検索するときの引数を
-"class:hoge,id:hoge"
-みたいな感じで受け取りたいので
- */
-func argumentSplit(s string) map[string][]string {
-	ls := strings.Split(s,",")
-	result := map[string][]string{}
-	for _,v := range ls {
-		key_value := strings.Split(v,":")
-		if _,ok := result[key_value[0]];ok {
-			result[key_value[0]] = append(result[key_value[0]], key_value[1])
-		} else {
-			result[key_value[0]] = []string{key_value[1]}
-		}
-	}
+func SearchAll (elem *HTMLParser.Element,tag string,optionName string,optionValue []string) []*HTMLParser.Element {
+	result := []*HTMLParser.Element{}
+	search_(&result,elem,2147483647,tag,optionName,optionValue)
 	return result
 }
 
@@ -35,8 +22,8 @@ elem <- 検索する木の根を指定
 counter <- のこり何個見つけるか
 searchKey <- {"class":"hoge"}　みたいに
  */
-func search(result *[]*HTMLParser.Element,elem *HTMLParser.Element,counter int,searchKey map[string]string)  {
-	if check(elem,searchKey) {
+func search_(result *[]*HTMLParser.Element,elem *HTMLParser.Element,counter int,tag string,optionName string,optionValue []string)  {
+	if check(elem,tag,optionName,optionValue) {
 		(*result) = append(*result,elem)
 		counter--
 	}
@@ -44,27 +31,43 @@ func search(result *[]*HTMLParser.Element,elem *HTMLParser.Element,counter int,s
 	for _,child := range elem.Data {
 		switch v := child.(type) {
 		case *HTMLParser.Element:
-			search(result,v,counter,searchKey)
+			search_(result,v,counter,tag,optionName,optionValue)
 		}
 	}
 }
 
 // 要素が該当するかチェック
-func check(elem *HTMLParser.Element,searchKey map[string]string) bool {
-	for k,v := range searchKey {
-		if !optionCheck(elem,k,v) {
-			return false
+func check(elem *HTMLParser.Element,tag string,optionName string,optionValue []string) bool {
+	if !tagCheck(elem,tag){return false}
+	for _,v := range optionValue {
+		if optionCheck(elem,optionName,v) {
+			return true
 		}
 	}
-	return true
+	return false
 }
 
 // optionがあるかどうか
 func optionCheck(elem *HTMLParser.Element,k string,v string) bool {
+	if k == "class" {return optionCheck_class(elem,v)}
 	if elemV,ok := elem.Option[k];ok {
 		if elemV == v {
 			return true
 		}
 	}
 	return false
+}
+
+// classのみ複数チェック
+func optionCheck_class(elem *HTMLParser.Element,v string) bool {
+	ls := strings.Split(elem.Option["class"]," ")
+	for _,vv := range ls {
+		if vv == v{return true}
+	}
+	return false
+}
+
+// タグが一致しているか
+func tagCheck(elem *HTMLParser.Element,tag string) bool {
+	return elem.Tag == tag
 }
