@@ -57,11 +57,37 @@ func removeSpace(s string) string {
 	return tmp
 }
 
+func locateStartTag(s []byte) [][]int {
+	mutchstring := `<[a-zA-Z][-.a-zA-Z0-9:_]*(?:\s+(?:[a-zA-Z_][-.:a-zA-Z0-9_]*(?:\s*=\s*(?:'[^']*'|\"[^\"]*\"|[^'\">\s]+))?))*\s*>`
+	re := regexp.MustCompile(mutchstring)
+	return re.FindAllIndex(s,-1)
+}
+
+func locateEndTag(s []byte) [][]int {
+	mutchstring := `</[a-zA-Z][-.a-zA-Z0-9:_]*\s*>`
+	re := regexp.MustCompile(mutchstring)
+	return re.FindAllIndex(s,-1)
+}
+
 // This function find indexes HTML tag
 func findAllIndex(s string) [][]int {
 	content := []byte(s)
-	re := regexp.MustCompile(`<("[^"]*"|'[^']*'|[^'">])*>`)
-	return re.FindAllIndex(content,-1)
+	start := locateStartTag(content);end := locateEndTag(content)
+	result := make([][]int,len(start)+len(end))
+	now := 0;sidx := 0;eidx := 0
+	for ;now < len(result); {
+		if sidx >= len(start) {
+			result[now] = end[eidx];eidx ++
+		} else if eidx >= len(end) {
+			result[now] = start[sidx];sidx ++
+		} else if start[sidx][0] > end[eidx][0]{
+			result[now] = end[eidx];eidx ++
+		} else {
+			result[now] = start[sidx];sidx ++
+		}
+		now ++
+	}
+	return result
 }
 
 func RemoveAllComment(s string) string {
@@ -95,7 +121,14 @@ func popElement(stack *[]*Element,s string)  {
 	} else if nonePareOmitted.Exist((*stack)[len(*stack) - 1].Tag) && (*stack)[len(*stack) - 2].Tag == tag{
 		*stack = (*stack)[:len(*stack) - 2]
 	} else {
-		fmt.Println("failer")
+		fmt.Println("failer",(*stack)[len(*stack)-1].Tag,tag)
+	}
+}
+
+func removeDoctype(indexes *[][]int,s *string)  {
+	tag,_ := getAttribute((*s)[(*indexes)[0][0]:(*indexes)[0][1]])
+	if tag == "!doctype"{
+		*indexes = (*indexes)[1:]
 	}
 }
 
@@ -103,6 +136,7 @@ func popElement(stack *[]*Element,s string)  {
 func Solv(s string) *Element {
 	indexes := findAllIndex(s)
 	stack := []*Element{}
+	removeDoctype(&indexes,&s)
 	tag,option := getAttribute(s[indexes[0][0]:indexes[0][1]])
 	elem := NewElement(tag,option)
 	stack = append(stack,elem)
