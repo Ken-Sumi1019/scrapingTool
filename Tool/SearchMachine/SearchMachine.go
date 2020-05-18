@@ -5,49 +5,35 @@ import (
 	"strings"
 )
 
-type dataBox struct {
 
-}
-
-func SearchFirst(elem *HTMLParser.Element,tag string,optionName string,optionValue []string) *HTMLParser.Element {
-	result := []*HTMLParser.Element{}
-	n := 1
-	search_(&result,elem,&n,tag,optionName,optionValue)
-	return result[0]
-}
-
-func SearchAll (elem *HTMLParser.Element,tag string,optionName string,optionValue []string) []*HTMLParser.Element {
-	result := []*HTMLParser.Element{}
-	n := 2147483647
-	search_(&result,elem,&n,tag,optionName,optionValue)
-	return result
-}
 
 /*
 配下の要素をたどる
 result <- 見つけた要素を入れるスライス
 elem <- 検索する木の根を指定
 counter <- のこり何個見つけるか
-searchKey <- {"class":"hoge"}　みたいに
+tag <- タグ名
+optionName <- classとかnameとか
+optionValue <-
  */
-func search_(result *[]*HTMLParser.Element,elem *HTMLParser.Element,counter *int,tag string,optionName string,optionValue []string)  {
-	if (*counter) <= 0{return}
+func Search_(result *[]*HTMLParser.Element,elem *HTMLParser.Element,counter int,tag string,optionName string,optionValue []string) {
+	if counter <= 0{return}
 	if check(elem,tag,optionName,optionValue) {
 		(*result) = append(*result,elem)
-		(*counter) --
 	}
-	if (*counter) <= 0{return}
+	// if (*counter) <= 0{return}
 	for _,child := range elem.Data {
 		switch v := child.(type) {
 		case *HTMLParser.Element:
-			search_(result,v,counter,tag,optionName,optionValue)
+			Search_(result,v,counter,tag,optionName,optionValue)
 		}
 	}
 }
 
 // 要素が該当するかチェック
 func check(elem *HTMLParser.Element,tag string,optionName string,optionValue []string) bool {
-	if !tagCheck(elem,tag){return false}
+	if !tagCheck(elem,tag) {return false}
+	if optionName == "" {return true}
 	for _,v := range optionValue {
 		if optionCheck(elem,optionName,v) {
 			return true
@@ -78,5 +64,6 @@ func optionCheck_class(elem *HTMLParser.Element,v string) bool {
 
 // タグが一致しているか
 func tagCheck(elem *HTMLParser.Element,tag string) bool {
+	if tag == "" {return true}
 	return elem.Tag == tag
 }
