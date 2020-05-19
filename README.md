@@ -11,14 +11,16 @@ import (
 )
 
 func main ()  {
-    s := `<div><p>ようこそ</p></div>`
+    s := `<div><p id = "welcome">ようこそ</p></div>`
     e :=Tool.ParseHTML(s)
     p := Tool.SearchFirst(e,"p","",[]string{})
-    fmt.Println(Tool.GetTextNoneTab(p))
+    fmt.Print(Tool.GetTextNoneTab(p))
+    fmt.Println(p.Option["id"])
 }
 ```
 ```text
 ようこそ
+welcome
 ```
 ```text
 func ParseHTML(s string) (elem *HTMLParser.Element)
