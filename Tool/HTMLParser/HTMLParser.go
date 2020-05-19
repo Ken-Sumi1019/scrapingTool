@@ -12,6 +12,10 @@ var (
 	singleTag = singularData.SingleTag()
 	canBeOmitted = singularData.CanBeOmitted()
 	nonePareOmitted = singularData.NonePareOmitted()
+	tagSearch = regexp.MustCompile("[a-zA-Z][-.a-zA-Z0-9:_]*")
+	option = regexp.MustCompile(`\s+[a-zA-Z_][-.:a-zA-Z0-9_]*(?:\s*=\s*(?:'[^']*'|\"[^\"]*\"|[^'\">\s]+))?`)
+	optionKey = regexp.MustCompile(`\s+(?:[a-zA-Z_][-.:a-zA-Z0-9_]*\s*)*=`)
+	optionVal = regexp.MustCompile(`=\s*(?:'[^']*'|\"[^\"]*\"|[^'\">\s]+)`)
 )
 
 
@@ -29,25 +33,26 @@ func NewElement(tag string,d map[string]string) *Element {
 
 func getAttribute(s string) (string,map[string]string) {
 	result := map[string]string{}
-	frag := 0;tag := ""
-	left := -1;key := ""
-	var shiki uint8
-	for i := 0;i < len(s);i ++{
-		if len(tag) == 0 && (s[i] == ' ' || s[i] == '>') {
-			tag = s[1:i]
+	tag := tagSearch.FindIndex([]byte(s))
+	optionList := option.FindAllIndex([]byte(s),-1)
+	for _,v := range optionList {
+		keyindex := optionKey.FindIndex([]byte(s[v[0]:v[1]]))
+		valindex := optionVal.FindIndex([]byte(s[v[0]:v[1]]))
+		if len(keyindex) <= 1 {
+			result[removeSpace(s[v[0]:v[1]])] = "";continue
 		}
-		if len(tag) == 0{continue}
-		if frag == 0 && s[i] == ' ' {
-			frag = 1;left = i + 1
-		} else if frag == 1 && s[i] == '='{
-			key = removeSpace(s[left:i])
-		} else if frag == 1 && (s[i] == '"' || s[i] == '\'') {
-			left = i + 1;frag = 2;shiki = s[i]
-		} else if frag == 2 && s[i] == shiki {
-			result[key] = s[left:i];frag = 0
+		key := s[v[0]:v[1]][keyindex[0]:keyindex[1]-1]
+		key = removeSpace(key)
+		idx := 0
+		for i := valindex[0];i < valindex[1];i ++ {
+			if s[v[0]:v[1]][i] == '"' || s[v[0]:v[1]][i] == '\''{
+				idx = i;break
+			}
 		}
+		val := s[v[0]:v[1]][idx+1:valindex[1]-1]
+		result[key] = val
 	}
-	return tag,result
+	return s[tag[0]:tag[1]],result
 }
 
 // This function remove front space and back space
@@ -58,7 +63,7 @@ func removeSpace(s string) string {
 }
 
 func locateStartTag(s []byte) [][]int {
-	mutchstring := `<[a-zA-Z][-.a-zA-Z0-9:_]*(?:\s+(?:[a-zA-Z_][-.:a-zA-Z0-9_]*(?:\s*=\s*(?:'[^']*'|\"[^\"]*\"|[^'\">\s]+))?))*\s*>`
+	mutchstring := `<[a-zA-Z][-.a-zA-Z0-9:_]*(?:\s+(?:[a-zA-Z_][-.:a-zA-Z0-9_]*(?:\s*=\s*(?:'[^']*'|\"[^\"]*\"|[^'\">\s]+))?))*\s*/?>`
 	re := regexp.MustCompile(mutchstring)
 	return re.FindAllIndex(s,-1)
 }
@@ -115,7 +120,7 @@ func addElement(stack *[]*Element,s string)  {
 }
 
 func popElement(stack *[]*Element,s string)  {
-	tag,_ := getAttribute(s);tag = tag[1:]
+	tag,_ := getAttribute(s)//;tag = tag[1:]
 	if (*stack)[len(*stack) - 1].Tag == tag {
 		*stack = (*stack)[:len(*stack) - 1]
 	} else if nonePareOmitted.Exist((*stack)[len(*stack) - 1].Tag) && (*stack)[len(*stack) - 2].Tag == tag{
@@ -136,7 +141,6 @@ func removeDoctype(indexes *[][]int,s *string)  {
 func Solv(s string) *Element {
 	indexes := findAllIndex(s)
 	stack := []*Element{}
-	removeDoctype(&indexes,&s)
 	tag,option := getAttribute(s[indexes[0][0]:indexes[0][1]])
 	elem := NewElement(tag,option)
 	stack = append(stack,elem)
