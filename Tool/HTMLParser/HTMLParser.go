@@ -168,17 +168,31 @@ func mapToString(m map[string]string) string {
 	return s
 }
 
-func Decode(elem *Element,n int,s *string,ifTab int) {
-	(*s) = strings.Join([]string{(*s),strings.Repeat("\t",n*ifTab),"<",elem.Tag,"> ",mapToString(elem.Option),ifNewLine(ifTab)},"")
+func Decode_(elem *Element,n int,s *string,ifTab int) {
+	(*s) = strings.Join([]string{(*s),strings.Repeat("\t",n*ifTab),"<",elem.Tag,">",mapToString(elem.Option),ifNewLine(ifTab)},"")
 	for i := 0;i < len(elem.Data);i ++ {
 		switch v := elem.Data[i].(type) {
 		case string:
 			(*s) = strings.Join([]string{(*s),strings.Repeat("\t",(n+1)*ifTab),v,ifNewLine(ifTab)},"")
 		case *Element:
-			Decode(v,n+1,s,ifTab)
+			Decode_(v,n+1,s,ifTab)
 		}
 	}
 	(*s) = strings.Join([]string{*s,strings.Repeat("\t",n*ifTab),"</",elem.Tag,">",ifNewLine(ifTab)},"")
+}
+
+func Decode(elem interface{},n int,s *string,ifTab int) {
+
+	switch v := elem.(type) {
+	case string:
+		(*s) = strings.Join([]string{(*s),strings.Repeat("\t",n*ifTab),v,ifNewLine(ifTab)},"")
+	case *Element:
+		(*s) = strings.Join([]string{(*s),strings.Repeat("\t",n*ifTab),"<",v.Tag,">",mapToString(v.Option),ifNewLine(ifTab)},"")
+		for i := 0;i < len(v.Data);i++ {
+			Decode(v.Data[i],n + 1,s,ifTab)
+		}
+		(*s) = strings.Join([]string{*s,strings.Repeat("\t",n*ifTab),"</",v.Tag,">",ifNewLine(ifTab)},"")
+	}
 }
 
 func ifNewLine(n int) string {

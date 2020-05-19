@@ -30,12 +30,16 @@ func SearchAll (elem *HTMLParser.Element,tag string,optionName string,optionValu
 
 func GetText(elem *HTMLParser.Element) string {
 	s := ""
-	HTMLParser.Decode(elem,0,&s,1)
+	for _,v := range elem.Data {
+		HTMLParser.Decode(v,0,&s,1)
+	}
 	return s
 }
 
 func GetTextNoneTab(elem *HTMLParser.Element) string {
 	s := ""
-	HTMLParser.Decode(elem,0,&s,0)
+	for _,v := range elem.Data {
+		HTMLParser.Decode(v,0,&s,0)
+	}
 	return s
 }
