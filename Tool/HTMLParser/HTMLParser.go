@@ -12,6 +12,7 @@ var (
 	singleTag = singularData.SingleTag()
 	canBeOmitted = singularData.CanBeOmitted()
 	nonePareOmitted = singularData.NonePareOmitted()
+	ptag = singularData.Ptag()
 	tagSearch = regexp.MustCompile("[a-zA-Z][-.a-zA-Z0-9:_]*")
 	option = regexp.MustCompile(`\s+[a-zA-Z_][-.:a-zA-Z0-9_]*(?:\s*=\s*(?:'[^']*'|\"[^\"]*\"|[^'\">\s]+))?`)
 	optionKey = regexp.MustCompile(`\s+(?:[a-zA-Z_][-.:a-zA-Z0-9_]*\s*)*=`)
@@ -141,15 +142,15 @@ func removeDoctype(indexes *[][]int,s *string)  {
 func Solv(s string) *Element {
 	indexes := findAllIndex(s)
 	stack := []*Element{}
-	tag,option := getAttribute(s[indexes[0][0]:indexes[0][1]])
-	elem := NewElement(tag,option)
+	elem := NewElement("root",map[string]string{})
 	stack = append(stack,elem)
-	for i := 1;i < len(indexes) -1;i ++{
+	for i := 0;i < len(indexes);i ++{
 		if s[indexes[i][0] + 1] == '/' {
 			popElement(&stack,s[indexes[i][0]:indexes[i][1]])
 		} else {
 			addElement(&stack,s[indexes[i][0]:indexes[i][1]])
 		}
+		if i + 1 == len(indexes){break}
 		tmp := removeSpace(s[indexes[i][1]:indexes[i + 1][0]])
 		if len(tmp) != 0 {
 			stack[len(stack)-1].Data = append(stack[len(stack)-1].Data, tmp)

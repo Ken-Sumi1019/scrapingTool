@@ -21,7 +21,11 @@ map{hoge2:{hoge},hoge1:{hoge}}
 func CanBeOmitted() map[string]*set.Set {
 	ls := map[string][]string{"li":{"li"},"dt":{"dd","dt"},"dd":{"dt","dd"},"rt":{"rt","rp"},"rp":{"rt","rp"},
 		"optgroup":{"optgroup","option"},"option":{"option"},"tbody":{"thead","tbody"},"tfoot":{"thead","tbody"},
-		"tr":{"tr"},"td":{"td","th"},"th":{"td","th"}}
+		"tr":{"tr"},"td":{"td","th"},"th":{"td","th"},"address":{"p"},"article":{"p"},"aside":{"p"},"blockquote":{"p"},
+		"details":{"p"},"div":{"p"},"fieldset":{"p"},"dl":{"p"},"figcaption":{"p"},"figure":{"p"},"footer":{"p"},
+		"form":{"p"},"h1":{"p"},"h2":{"p"},"h3":{"p"},"h4":{"p"},"h5":{"p"},"h6":{"p"},"header":{"p"},"hgroup":{"p"},
+		"hr":{"p"},"main":{"p"},"menu":{"p"},"nav":{"p"},"ol":{"p"},"p":{"p"},"pre":{"p"},"section":{"p"},"table":{"p"},
+		"ul":{"p"}}
 	result := map[string]*set.Set{}
 	for k,_ := range ls {
 		result[k] = set.MakeSet()
@@ -38,7 +42,16 @@ func CanBeOmitted() map[string]*set.Set {
 hogeは親要素にそれ以上要素がない場合に省略可能の場合に対応
  */
 func NonePareOmitted() *set.Set {
-	ls := []string{"li","dd","rt","rp","optgroup","option","tbody","tfoot","tr","td","th"}
+	ls := []string{"li","dd","rt","rp","optgroup","option","tbody","tfoot","tr","td","th","p"}
+	result := set.MakeSet()
+	for _,v := range ls {
+		result.Add(v)
+	}
+	return result
+}
+
+func Ptag() *set.Set {
+	ls := []string{"a","audio","del","ins","map","noscript","video"}
 	result := set.MakeSet()
 	for _,v := range ls {
 		result.Add(v)
