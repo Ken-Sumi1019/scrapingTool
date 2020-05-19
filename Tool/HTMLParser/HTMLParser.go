@@ -96,7 +96,7 @@ func findAllIndex(s string) [][]int {
 }
 
 func RemoveAllComment(s string) string {
-	re := regexp.MustCompile(`<!--.*?-->`)
+	re := regexp.MustCompile("<!--[\\S\\s]*?-->")
 	s = re.ReplaceAllString(s,"")
 	return s
 }
@@ -114,7 +114,7 @@ func addElement(stack *[]*Element,s string)  {
 	detectionOmitted(stack,tag)
 	ref := NewElement(tag,option)
 	(*stack)[len(*stack)-1].Data = append((*stack)[len(*stack)-1].Data, ref)
-	if ! singleTag.Exist(tag) {
+	if (! singleTag.Exist(tag)) && (! (s[len(s)-2] == '/')) {
 		*stack = append(*stack, ref)
 	}
 }
