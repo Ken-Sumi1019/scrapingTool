@@ -15,8 +15,9 @@ var (
 	ptag = singularData.Ptag()
 	tagSearch = regexp.MustCompile("[a-zA-Z][-.a-zA-Z0-9:_]*")
 	option = regexp.MustCompile(`\s+[a-zA-Z_][-.:a-zA-Z0-9_]*(?:\s*=\s*(?:'[^']*'|\"[^\"]*\"|[^'\">\s]+))?`)
-	optionKey = regexp.MustCompile(`\s+(?:[a-zA-Z_][-.:a-zA-Z0-9_]*\s*)*=`)
+	optionKey = regexp.MustCompile(`\s*(?:[a-zA-Z_][-.:a-zA-Z0-9_]*\s*)*=`)
 	optionVal = regexp.MustCompile(`=\s*(?:'[^']*'|\"[^\"]*\"|[^'\">\s]+)`)
+	javascript = regexp.MustCompile(`<script[\s\S]*?</script[\s\n\r]*?>`)
 )
 
 
@@ -64,7 +65,7 @@ func removeSpace(s string) string {
 }
 
 func locateStartTag(s []byte) [][]int {
-	mutchstring := `<[a-zA-Z][-.a-zA-Z0-9:_]*(?:\s+(?:[a-zA-Z_][-.:a-zA-Z0-9_]*(?:\s*=\s*(?:'[^']*'|\"[^\"]*\"|[^'\">\s]+))?))*\s*/?>`
+	mutchstring := `<[a-zA-Z][-.a-zA-Z0-9:_]*(?:\s*?(?:[a-zA-Z_][-.:a-zA-Z0-9_]*(?:\s*=\s*(?:'[^']*'|\"[^\"]*\"|[^'\">\s]+))?))*\s*/?>`
 	re := regexp.MustCompile(mutchstring)
 	return re.FindAllIndex(s,-1)
 }
@@ -73,6 +74,27 @@ func locateEndTag(s []byte) [][]int {
 	mutchstring := `</[a-zA-Z][-.a-zA-Z0-9:_]*\s*>`
 	re := regexp.MustCompile(mutchstring)
 	return re.FindAllIndex(s,-1)
+}
+
+func margeJs(s string,moto [][]int) [][]int {
+	result := make([][]int,0,len(moto))
+	jsIdxes := javascript.FindAllIndex([]byte(s),-1)
+	jsHead := 0
+	for motoIdx := 0;motoIdx < len(moto);motoIdx++ {
+		if jsIdxes[jsHead][0] >= moto[motoIdx][1] {
+			result = append(result, moto[motoIdx])
+		} else if jsIdxes[jsHead][0] == moto[motoIdx][0] {
+			result = append(result,moto[motoIdx])
+		} else if jsIdxes[jsHead][0] < moto[motoIdx][0] && jsIdxes[jsHead][1] > moto[motoIdx][1] {
+			continue
+		} else if jsIdxes[jsHead][1] == moto[motoIdx][1] {
+			result = append(result,moto[motoIdx])
+			if jsHead < len(jsIdxes) - 1 {jsHead++}
+		} else {
+			result = append(result, moto[motoIdx])
+		}
+	}
+	return result
 }
 
 // This function find indexes HTML tag
@@ -93,7 +115,7 @@ func findAllIndex(s string) [][]int {
 		}
 		now ++
 	}
-	return result
+	return margeJs(s,result)
 }
 
 func RemoveAllComment(s string) string {
@@ -120,14 +142,14 @@ func addElement(stack *[]*Element,s string)  {
 	}
 }
 
-func popElement(stack *[]*Element,s string)  {
+func popElement(stack *[]*Element,s string,fo []int)  {
 	tag,_ := getAttribute(s)//;tag = tag[1:]
 	if (*stack)[len(*stack) - 1].Tag == tag {
 		*stack = (*stack)[:len(*stack) - 1]
 	} else if nonePareOmitted.Exist((*stack)[len(*stack) - 1].Tag) && (*stack)[len(*stack) - 2].Tag == tag{
 		*stack = (*stack)[:len(*stack) - 2]
 	} else {
-		fmt.Println("failer",(*stack)[len(*stack)-1].Tag,tag)
+		fmt.Println("failer",(*stack)[len(*stack)-1].Tag,(*stack)[len(*stack)-1].Option,tag,fo)
 	}
 }
 
@@ -146,7 +168,7 @@ func Solv(s string) *Element {
 	stack = append(stack,elem)
 	for i := 0;i < len(indexes);i ++{
 		if s[indexes[i][0] + 1] == '/' {
-			popElement(&stack,s[indexes[i][0]:indexes[i][1]])
+			popElement(&stack,s[indexes[i][0]:indexes[i][1]],indexes[i])
 		} else {
 			addElement(&stack,s[indexes[i][0]:indexes[i][1]])
 		}
