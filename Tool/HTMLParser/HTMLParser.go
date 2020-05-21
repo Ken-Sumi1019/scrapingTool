@@ -142,14 +142,25 @@ func addElement(stack *[]*Element,s string)  {
 	}
 }
 
+// stack内に要素が含まれるか
+func ifStackInTo(stack *[]*Element,tag string) int {
+	for idx := len(*stack)-1;idx >= 0;idx -- {
+		if (*stack)[idx].Tag == tag {
+			return idx
+		}
+	}
+	return -1
+}
+
 func popElement(stack *[]*Element,s string,fo []int)  {
 	tag,_ := getAttribute(s)//;tag = tag[1:]
 	if (*stack)[len(*stack) - 1].Tag == tag {
 		*stack = (*stack)[:len(*stack) - 1]
 	} else if nonePareOmitted.Exist((*stack)[len(*stack) - 1].Tag) && (*stack)[len(*stack) - 2].Tag == tag{
 		*stack = (*stack)[:len(*stack) - 2]
-	} else {
-		fmt.Println("failer",(*stack)[len(*stack)-1].Tag,(*stack)[len(*stack)-1].Option,tag,fo)
+	} else if idx := ifStackInTo(stack,tag);idx >= 0 {
+		(*stack) = (*stack)[:idx]
+		//fmt.Println("failer",(*stack)[len(*stack)-1].Tag,(*stack)[len(*stack)-1].Option,tag,fo)
 	}
 }
 
